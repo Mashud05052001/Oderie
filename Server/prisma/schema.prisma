@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MODEL
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  role      UserRole   @default(CUSTOMER)
+  password  String
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // References
+  Profile Profile?
+  Vendor  Vendor?
+  Review  Review[]
+  Order   Order[]
+  Follow  Follow[]
+
+  @@map("users")
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  phone     String?
+  name      String
+  address   String?
+  img       String?
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  User User @relation(fields: [email], references: [email])
+
+  @@map("profiles")
+}
+
+model Vendor {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String
+  phone         String?
+  logo          String?
+  description   String?
+  addresss      String?
+  isBlackListed Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  User           User             @relation(fields: [email], references: [email])
+  Product        Product[]
+  VendorResponse VendorResponse[]
+  Order          Order[]
+  Follow         Follow[]
+
+  @@map("vendors")
+}
+
+model Follow {
+  userId   String
+  vendorId String
+
+  User   User   @relation(fields: [userId], references: [id])
+  Vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@id([userId, vendorId])
+  @@map("follows")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  icon      String
+  Product   Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  vendorId    String
+  categoryId  String
+  title       String
+  img         String[]
+  description String
+  price       Float
+  quantity    Int
+
+  //  discount
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // References
+  Vendor   Vendor      @relation(fields: [vendorId], references: [id])
+  Category Category    @relation(fields: [categoryId], references: [id])
+  Review   Review[]
+  Order    OrderItem[]
+  Coupon   Coupon[]
+
+  @@map("products")
+}
+
+model Coupon {
+  id         String   @id @default(uuid())
+  code       String
+  percentage Float
+  expiryDate DateTime
+  productId  String
+
+  Product Product @relation(fields: [productId], references: [id])
+
+  @@map("coupons")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  message   String
+  ratings   Int
+  productId String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  Product        Product         @relation(fields: [productId], references: [id])
+  User           User            @relation(fields: [userId], references: [id])
+  VendorResponse VendorResponse?
+
+  @@map("reviews")
+}
+
+model VendorResponse {
+  id       String @id @default(uuid())
+  message  String
+  reviewId String @unique
+  vendorId String
+
+  Review Review @relation(fields: [reviewId], references: [id])
+  Vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+
+  @@map("vendorResponses")
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  transactionId String
+  amount        Float
+  orderId       String   @unique
+  getwayData    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  userId        String
+  vendorId      String
+  status        OrderStatus   @default(PENDING)
+  totalPrice    Float
+  paymentStatus PaymentStatus @default(UNPAID)
+
+  User    User     @relation(fields: [userId], references: [id])
+  Vendor  Vendor   @relation(fields: [vendorId], references: [id])
+  Payment Payment?
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  OrderItem OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  productId String
+  orderId   String
+  quantity  Int
+
+  Product Product @relation(fields: [productId], references: [id])
+  Order   Order   @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orderItems")
+}
+
+// ENUM
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  VENDOR
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  DELETED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  DELIVERED
+  CANCELLED
+}
