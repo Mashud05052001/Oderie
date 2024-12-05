@@ -1,13 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
-import { UserRole } from "@prisma/client";
-
-export interface TJwtPayload {
-  name: string;
-  email: string;
-  role: UserRole;
-  profilePicture: string;
-}
+import { TJwtPayload } from "../interface/jwt.type";
 
 const createJwtToken = (
   payload: TJwtPayload,
@@ -48,7 +41,7 @@ const isJwtIssueBeforePasswordChange = function (
   return jwtIssuedTime < passwordChangedTime;
 };
 
-export const jwtHelpers = {
+export const jwtHelper = {
   createJwtToken,
   createJwtAccessToken,
   createJwtRefreshToken,

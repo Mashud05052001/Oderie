@@ -3,6 +3,7 @@ import cors from "cors";
 import globalErrorHandler from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
 import cookieParser from "cookie-parser";
+import { AllRoutes } from "./app/routes";
 
 export const app: Application = express();
 
@@ -18,7 +19,7 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-// app.use("/api/v1", AllRoutes);
+app.use("/api/v1", AllRoutes);
 
 app.use(globalErrorHandler);
 app.use(notFound);
