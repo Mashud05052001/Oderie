@@ -1,12 +1,12 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { TCategory } from "./category.interface";
-import { Prisma } from "../../config";
+import { prisma } from "../../config";
 import { capitalizeEveryWord } from "../../shared/capitalize";
 import { TImageFile } from "../../interface/image.interface";
 
 const createCategory = async (payload: TCategory, file: TImageFile) => {
-  const prevCategories = await Prisma.category.findFirst({
+  const prevCategories = await prisma.category.findFirst({
     where: {
       name: {
         equals: payload.name,
@@ -17,7 +17,7 @@ const createCategory = async (payload: TCategory, file: TImageFile) => {
   const modifiedName = capitalizeEveryWord(payload?.name);
   if (prevCategories) {
     if (prevCategories.isDeleted) {
-      const result = await Prisma.category.update({
+      const result = await prisma.category.update({
         where: { id: prevCategories.id },
         data: { isDeleted: false },
       });
@@ -28,14 +28,14 @@ const createCategory = async (payload: TCategory, file: TImageFile) => {
       `${payload.name} category is already exist`
     );
   }
-  const result = await Prisma.category.create({
+  const result = await prisma.category.create({
     data: { name: modifiedName, icon: file.path },
   });
   return result;
 };
 
 const getAllCategories = async () => {
-  const result = await Prisma.category.findMany({});
+  const result = await prisma.category.findMany({});
   return result;
 };
 
@@ -44,7 +44,7 @@ const updateCategory = async (
   payload: TCategory,
   file: TImageFile | undefined
 ) => {
-  const prevCategory = await Prisma.category.findUnique({
+  const prevCategory = await prisma.category.findUnique({
     where: {
       id,
     },
@@ -55,14 +55,14 @@ const updateCategory = async (
 
   if (file) {
     const modifiedName = capitalizeEveryWord(payload?.name);
-    const result = await Prisma.category.update({
+    const result = await prisma.category.update({
       where: { id },
       data: { name: modifiedName, icon: file.path },
     });
     return result;
   }
 
-  const result = await Prisma.category.update({
+  const result = await prisma.category.update({
     where: { id },
     data: { name: payload.name },
   });
@@ -70,12 +70,12 @@ const updateCategory = async (
 };
 
 const deleteCategory = async (id: string) => {
-  await Prisma.category.update({ where: { id }, data: { isDeleted: true } });
+  await prisma.category.update({ where: { id }, data: { isDeleted: true } });
   return "Category Deleted successfully";
 };
 
 const deleteAllCategories = async () => {
-  await Prisma.category.updateMany({ data: { isDeleted: true } });
+  await prisma.category.updateMany({ data: { isDeleted: true } });
   return "All categories deleted successfully";
 };
 

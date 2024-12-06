@@ -9,6 +9,7 @@ import validateImageFileRequest from "../../middleware/validateImageFileRequest"
 import { ImageFilesOfArrayValidationSchema } from "../../zod/image.validation";
 import { parseBody } from "../../middleware/bodyParser";
 import auth from "../../middleware/auth";
+import authDecodeToken from "../../middleware/authDecodeToken";
 
 const router = Router();
 
@@ -21,10 +22,25 @@ router.post(
   validateRequest(ProductValidation.create),
   ProductController.createProduct
 );
-
-router.get("/", ProductController.getAllProducts);
+router.get("/", authDecodeToken(), ProductController.getAllProducts);
 router.get("/:id", ProductController.getSingleProduct);
-router.patch("/:id", ProductController.updateProduct);
+
+router.patch(
+  "/:id",
+  auth("VENDOR"),
+  multerUpload.fields([{ name: "files", maxCount: 4 }]),
+  (req, res, next) => {
+    if (req.files) {
+      validateImageFileRequest(ImageFilesOfArrayValidationSchema, false);
+      req.body = JSON.parse(req.body.data);
+      validateRequest(ProductValidation.update);
+    } else {
+      validateRequest(ProductValidation.update);
+    }
+    next();
+  },
+  ProductController.updateProduct
+);
 router.delete("/:id", ProductController.deleteProduct);
 
 export const ProductRoutes = router;

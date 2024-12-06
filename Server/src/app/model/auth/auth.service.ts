@@ -1,5 +1,5 @@
 import httpStatus from "http-status";
-import config, { Prisma } from "../../config";
+import config, { prisma } from "../../config";
 import AppError from "../../errors/AppError";
 import { bcryptHelper } from "../../utils/bcryptPassword";
 import {
@@ -23,7 +23,7 @@ import moment from "moment";
 import { generateRandomCode } from "../../shared/generateResetCode";
 
 const registerUser = async (payload: TRegisterUser) => {
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: payload?.email },
   });
   if (user) {
@@ -37,7 +37,7 @@ const registerUser = async (payload: TRegisterUser) => {
     payload.password
   );
 
-  const result = await Prisma.$transaction(async (tsx) => {
+  const result = await prisma.$transaction(async (tsx) => {
     const registerUserData: Pick<User, "email" | "password" | "role"> = {
       email: payload.email,
       password: hashedPassword,
@@ -45,14 +45,14 @@ const registerUser = async (payload: TRegisterUser) => {
     };
     const userOrVendorData = { name: payload.name, email: payload.email };
 
-    const userData = await Prisma.user.create({
+    const userData = await prisma.user.create({
       data: registerUserData,
     });
 
     if (payload.role === "CUSTOMER") {
-      await Prisma.profile.create({ data: userOrVendorData });
+      await prisma.profile.create({ data: userOrVendorData });
     } else if (payload.role === "VENDOR") {
-      await Prisma.vendor.create({ data: userOrVendorData });
+      await prisma.vendor.create({ data: userOrVendorData });
     }
     userData.password = "";
     return userData;
@@ -61,7 +61,7 @@ const registerUser = async (payload: TRegisterUser) => {
 };
 
 const loginUser = async (payload: TLoginUser) => {
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: payload.email },
   });
   if (!user) {
@@ -114,7 +114,7 @@ const changePassword = async (
   );
 
   if (extendedUserData.role === "VENDOR") {
-    const vendorData = await Prisma.vendor.findUnique({
+    const vendorData = await prisma.vendor.findUnique({
       where: { email: extendedUserData.email },
     });
     if (vendorData?.isBlackListed) {
@@ -133,7 +133,7 @@ const changePassword = async (
     payload?.newPassword
   );
 
-  await Prisma.user.update({
+  await prisma.user.update({
     where: { email: extendedUserData.email },
     data: { password: hashedNewPassword },
   });
@@ -144,7 +144,7 @@ const changePassword = async (
 const accessToken = async (refreshToken: string) => {
   const decodedData = jwtHelper.verifyRefrestToken(refreshToken);
 
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: decodedData.email, status: "ACTIVE" },
   });
   if (!user) {
@@ -160,7 +160,7 @@ const accessToken = async (refreshToken: string) => {
 };
 
 const forgetPassword = async (payload: TForgetPassword) => {
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: payload.email, status: "ACTIVE" },
   });
   if (!user) {
@@ -173,7 +173,7 @@ const forgetPassword = async (payload: TForgetPassword) => {
   const sixDigitCode = generateRandomCode(6);
   const upcomingTime = moment(new Date()).add(10, "minutes").toISOString();
   console.log(upcomingTime);
-  const userData = await Prisma.user.update({
+  const userData = await prisma.user.update({
     where: { email: payload.email },
     data: {
       resetPasswordCode: sixDigitCode,
@@ -199,7 +199,7 @@ const forgetPassword = async (payload: TForgetPassword) => {
 };
 
 const checkResetCode = async (payload: TCheckResetCode) => {
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: payload.email, status: "ACTIVE" },
   });
   if (!user) {
@@ -218,7 +218,7 @@ const checkResetCode = async (payload: TCheckResetCode) => {
   }
 
   if (new Date() > user.resetPasswordExpiredDate) {
-    await Prisma.user.update({
+    await prisma.user.update({
       where: { email: payload.email },
       data: { resetPasswordCode: null, resetPasswordExpiredDate: null },
     });
@@ -229,7 +229,7 @@ const checkResetCode = async (payload: TCheckResetCode) => {
 };
 
 const resetPassword = async (payload: TResetPassword) => {
-  const user = await Prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: payload.email, status: "ACTIVE" },
   });
   if (!user) {
@@ -247,7 +247,7 @@ const resetPassword = async (payload: TResetPassword) => {
   }
 
   if (new Date() > user.resetPasswordExpiredDate) {
-    await Prisma.user.update({
+    await prisma.user.update({
       where: { email: payload.email },
       data: { resetPasswordCode: null, resetPasswordExpiredDate: null },
     });
@@ -258,7 +258,7 @@ const resetPassword = async (payload: TResetPassword) => {
     payload.password
   );
 
-  await Prisma.user.update({
+  await prisma.user.update({
     where: { email: payload.email },
     data: {
       password: hashedNewPassword,

@@ -21,6 +21,7 @@ const update = z.object({
         .string()
         .min(1, "Product description cannot be empty")
         .optional(),
+      img: z.string().array().optional(),
       price: z.number().positive("Price must be a positive number").optional(),
       quantity: z
         .number()

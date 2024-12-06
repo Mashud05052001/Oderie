@@ -1,10 +1,10 @@
 import { UserRole } from "@prisma/client";
-import config, { Prisma } from "../config";
+import config, { prisma } from "../config";
 import { bcryptHelper } from "../utils/bcryptPassword";
 
 const defaultSeeding = async () => {
   const admin_email = config.admin_email as string;
-  const isExist = await Prisma.user.findUnique({
+  const isExist = await prisma.user.findUnique({
     where: { email: admin_email, role: "ADMIN", status: "ACTIVE" },
   });
   if (!isExist) {
@@ -22,7 +22,7 @@ const defaultSeeding = async () => {
       name: config.admin_name as string,
       img: config.admin_profile_photo as string,
     };
-    await Prisma.$transaction(async (tsx) => {
+    await prisma.$transaction(async (tsx) => {
       await tsx.user.create({ data: adminUserData });
       await tsx.profile.create({ data: adminProfileData });
     });

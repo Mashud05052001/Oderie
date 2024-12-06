@@ -73,6 +73,9 @@ model Follow {
   userId   String
   vendorId String
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   User   User   @relation(fields: [userId], references: [id])
   Vendor Vendor @relation(fields: [vendorId], references: [id])
 
@@ -99,6 +102,7 @@ model Product {
   description String
   price       Float
   quantity    Int
+  isDeleted   Boolean  @default(false)
 
   //  discount
   createdAt DateTime @default(now())

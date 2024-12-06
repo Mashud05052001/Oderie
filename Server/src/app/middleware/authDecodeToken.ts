@@ -9,7 +9,7 @@ import { prisma } from "../config";
 
 /* AUTH Middleware */
 
-const auth = (...requiredRoles: UserRole[]) => {
+const authDecodeToken = () => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = (req?.headers?.authorization as string)?.split(" ")[1];
     if (!token) {
@@ -17,16 +17,12 @@ const auth = (...requiredRoles: UserRole[]) => {
     }
     const decoded = jwtHelper.verifyAccessToken(token) as JwtPayload;
 
-    if (requiredRoles && !requiredRoles.includes(decoded?.role)) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized");
-    }
-
     // DO user related work here
     const userData = await prisma.user.findUnique({
       where: { email: decoded.email },
     });
     if (!userData) {
-      throw new AppError(httpStatus.UNAUTHORIZED, "User not found!");
+      return next();
     } else if (userData.status === "BLOCKED" || userData.status === "DELETED") {
       throw new AppError(
         httpStatus.UNAUTHORIZED,
@@ -34,37 +30,19 @@ const auth = (...requiredRoles: UserRole[]) => {
       );
     }
 
-    if (decoded.role !== userData.role) {
-      throw new AppError(
-        httpStatus.UNAUTHORIZED,
-        "Authorization Failed due to invalid token"
-      );
-    }
-    let vendorProfile;
-    if (userData.role === "VENDOR") {
-      vendorProfile = await prisma.vendor.findUnique({
-        where: { email: userData.email },
-      });
-      if (vendorProfile?.isBlackListed) {
-        throw new AppError(
-          httpStatus.BAD_REQUEST,
-          "This vendor profile has been blacklisted"
-        );
-      }
-    }
-
     req.user = decoded as JwtPayload;
+
     req.extendedUserData = {
       email: userData.email,
-      password: userData.password,
+      password: "",
       role: userData.role,
       status: userData.status,
       userId: userData.id,
-      vendorId: vendorProfile ? vendorProfile.id : null,
+      vendorId: null,
     };
 
     next();
   });
 };
 
-export default auth;
+export default authDecodeToken;
