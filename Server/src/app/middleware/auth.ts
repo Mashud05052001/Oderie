@@ -25,6 +25,7 @@ const auth = (...requiredRoles: UserRole[]) => {
     const userData = await prisma.user.findUnique({
       where: { email: decoded.email },
     });
+
     if (!userData) {
       throw new AppError(httpStatus.UNAUTHORIZED, "User not found!");
     } else if (userData.status === "BLOCKED" || userData.status === "DELETED") {
@@ -40,6 +41,7 @@ const auth = (...requiredRoles: UserRole[]) => {
         "Authorization Failed due to invalid token"
       );
     }
+
     let vendorProfile;
     if (userData.role === "VENDOR") {
       vendorProfile = await prisma.vendor.findUnique({
