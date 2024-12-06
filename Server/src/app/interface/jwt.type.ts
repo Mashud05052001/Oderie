@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 
 export type TJwtPayload = {
   email: string;
@@ -7,4 +7,7 @@ export type TJwtPayload = {
 
 export type TExtendedUserData = TJwtPayload & {
   password: string;
+  status: UserStatus;
+  userId: string;
+  vendorId: string | null;
 };

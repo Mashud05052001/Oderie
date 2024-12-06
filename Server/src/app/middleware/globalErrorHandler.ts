@@ -2,10 +2,15 @@
 import { ErrorRequestHandler } from "express";
 import config from "../config";
 import { TErrorSources } from "../interface/error";
+import {
+  deleteMultipleImagesFromCloudinary,
+  deleteSingleImageFromCloudinary,
+} from "../utils/deleteImage";
+import { TImageFile, TImageFiles } from "../interface/image.interface";
 
 const globalErrorHandler: ErrorRequestHandler = async (err, req, res, next) => {
-  let statusCode = 500,
-    message = `Something went wrong!`,
+  let statusCode = err?.status || 500,
+    message = err?.message || `Something went wrong!`,
     errorSources: TErrorSources = [
       {
         path: "",
@@ -13,12 +18,12 @@ const globalErrorHandler: ErrorRequestHandler = async (err, req, res, next) => {
       },
     ];
 
-  // if (req.files && Object.keys(req.files).length > 0) {
-  //   await deleteMultipleImagesFromCloudinary(req.files as TImageFiles);
-  // }
-  // if (req.file && Object.keys(req.file).length > 0) {
-  //   await deleteSingleImageFromCloudinary(req.file as TImageFile);
-  // }
+  if (req.files && Object.keys(req.files).length > 0) {
+    await deleteMultipleImagesFromCloudinary(req.files as TImageFiles);
+  }
+  if (req.file && Object.keys(req.file).length > 0) {
+    await deleteSingleImageFromCloudinary(req.file as TImageFile);
+  }
 
   // const getModifiedError = () => {
   //   if (err instanceof ZodError) return handleZodError(err);

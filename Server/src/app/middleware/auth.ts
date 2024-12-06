@@ -40,8 +40,9 @@ const auth = (...requiredRoles: UserRole[]) => {
         "Authorization Failed due to invalid token"
       );
     }
+    let vendorProfile;
     if (userData.role === "VENDOR") {
-      const vendorProfile = await Prisma.vendor.findUnique({
+      vendorProfile = await Prisma.vendor.findUnique({
         where: { email: userData.email },
       });
       if (vendorProfile?.isBlackListed) {
@@ -57,7 +58,11 @@ const auth = (...requiredRoles: UserRole[]) => {
       email: userData.email,
       password: userData.password,
       role: userData.role,
+      status: userData.status,
+      userId: userData.id,
+      vendorId: vendorProfile ? vendorProfile.id : null,
     };
+
     next();
   });
 };

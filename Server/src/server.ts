@@ -1,11 +1,13 @@
 import { Server } from "http";
 import { app } from "./app";
+import defaultSeeding from "./app/db/seed";
 
 let server: Server;
 const port = process.env.PORT || 5000;
 
 async function connectServer() {
   try {
+    defaultSeeding();
     server = app.listen(port, () =>
       console.log(`🔥 The server is running on ${port} port`)
     );
