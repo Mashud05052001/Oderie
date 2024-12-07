@@ -43,6 +43,7 @@ const auth = (...requiredRoles: UserRole[]) => {
     }
 
     let vendorProfile;
+
     if (userData.role === "VENDOR") {
       vendorProfile = await prisma.vendor.findUnique({
         where: { email: userData.email },

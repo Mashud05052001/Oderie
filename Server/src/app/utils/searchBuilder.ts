@@ -18,7 +18,7 @@ type TReturnBuilderParams<TWhereInput> = {
   skip: number;
 };
 
-export const searchBuilder = <TWhereInput>({
+export const queryBuilder = <TWhereInput>({
   filters,
   searchableFields = [],
   additionalConditions = [],
@@ -58,7 +58,8 @@ export const searchBuilder = <TWhereInput>({
     andConditions.push({ AND: filterConditions } as TWhereInput);
   }
 
-  console.dir(`DEPTH =  ${andConditions}`, { depth: "Infinite" });
+  console.log("Inside Query Builder");
+  console.dir(andConditions, { depth: "Infinite" });
   return {
     where: (andConditions.length > 0
       ? { AND: andConditions }

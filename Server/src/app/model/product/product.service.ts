@@ -11,7 +11,7 @@ import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { TInclude, TPaginationOptions } from "../../interface/model.type";
-import { searchBuilder } from "../../utils/searchBuilder";
+import { queryBuilder } from "../../utils/searchBuilder";
 import { productSearchableFields } from "./product.constant";
 import { calculateRange } from "../../shared/calculateRange";
 import { returnMetaData } from "../../shared/returnMetaData";
@@ -54,7 +54,7 @@ const getAllProducts = async (
       price: priceObj,
     });
   }
-  const query = searchBuilder({
+  const query = queryBuilder({
     filters,
     pagination: paginateOptions,
     searchableFields: productSearchableFields,

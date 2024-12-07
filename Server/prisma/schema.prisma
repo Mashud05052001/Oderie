@@ -109,13 +109,24 @@ model Product {
   updatedAt DateTime @updatedAt
 
   // References
-  Vendor   Vendor      @relation(fields: [vendorId], references: [id])
-  Category Category    @relation(fields: [categoryId], references: [id])
-  Review   Review[]
-  Order    OrderItem[]
-  Coupon   Coupon[]
+  Vendor        Vendor          @relation(fields: [vendorId], references: [id])
+  Category      Category        @relation(fields: [categoryId], references: [id])
+  Review        Review[]
+  Order         OrderItem[]
+  ProductCoupon ProductCoupon[]
 
   @@map("products")
+}
+
+// Many to many relationship between product & coupons
+model ProductCoupon {
+  productId String
+  couponId  String
+  Product   Product @relation(fields: [productId], references: [id])
+  Coupon    Coupon  @relation(fields: [couponId], references: [id])
+
+  @@unique([productId, couponId])
+  @@map("productCoupons")
 }
 
 model Coupon {
@@ -123,9 +134,9 @@ model Coupon {
   code       String
   percentage Float
   expiryDate DateTime
-  productId  String
+  vendorId   String
 
-  Product Product @relation(fields: [productId], references: [id])
+  ProductCoupon ProductCoupon[]
 
   @@map("coupons")
 }
