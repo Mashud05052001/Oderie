@@ -142,13 +142,15 @@ model Coupon {
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  message   String
-  ratings   Int
-  productId String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  productImg String?
+  message    String
+  ratings    Int
+  productId  String
+  userId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isDeleted  Boolean  @default(false)
 
   // Relations
   Product        Product         @relation(fields: [productId], references: [id])
@@ -159,10 +161,11 @@ model Review {
 }
 
 model VendorResponse {
-  id       String @id @default(uuid())
-  message  String
-  reviewId String @unique
-  vendorId String
+  id        String  @id @default(uuid())
+  message   String
+  reviewId  String  @unique
+  vendorId  String
+  isDeleted Boolean @default(false)
 
   Review Review @relation(fields: [reviewId], references: [id])
   Vendor Vendor @relation(fields: [vendorId], references: [id])

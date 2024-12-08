@@ -4,7 +4,7 @@ import { calculatePagination } from "../shared/calculatePaginate";
 import { calculateRange } from "../shared/calculateRange";
 
 type TQueryBuilderParams<TWhereInput> = {
-  filters: Record<string, any>;
+  filters?: Record<string, any>;
   searchableFields?: string[];
   additionalConditions?: TWhereInput[];
   pagination: TPaginationOptions;
@@ -19,7 +19,7 @@ type TReturnBuilderParams<TWhereInput> = {
 };
 
 export const queryBuilder = <TWhereInput>({
-  filters,
+  filters = {},
   searchableFields = [],
   additionalConditions = [],
   pagination,
