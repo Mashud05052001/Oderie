@@ -8,7 +8,18 @@ const create = async (
   payload: TCreateVendorResponse,
   userInfo: TExtendedUserData
 ) => {
-  await prisma.review.findUniqueOrThrow({ where: { id: payload.reviewId } });
+  await prisma.review.findUniqueOrThrow({
+    where: { id: payload.reviewId, isDeleted: false },
+  });
+  const isAlreadyResponsed = await prisma.vendorResponse.findFirst({
+    where: { reviewId: payload.reviewId, isDeleted: false },
+  });
+  if (isAlreadyResponsed) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You can't response a review twice"
+    );
+  }
   const responseData = {
     message: payload.message,
     reviewId: payload.reviewId,

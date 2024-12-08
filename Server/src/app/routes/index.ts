@@ -7,6 +7,8 @@ import { UserRoutes } from "../model/users/user.route";
 import { CouponRoutes } from "../model/coupon/coupon.route";
 import { OrderRoutes } from "../model/order/order.route";
 import { PaymentRoutes } from "../model/payment/payment.route";
+import { ReviewRoutes } from "../model/review/review.route";
+import { VendorResponseRoutes } from "../model/vendorResponse/vendorResponse.route";
 
 const router = Router();
 
@@ -19,6 +21,8 @@ const moduleRoutes = [
   { path: "/coupon", element: CouponRoutes },
   { path: "/order", element: OrderRoutes },
   { path: "/payment", element: PaymentRoutes },
+  { path: "/review", element: ReviewRoutes },
+  { path: "/vendor-response", element: VendorResponseRoutes },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.element));

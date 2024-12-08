@@ -39,6 +39,7 @@ import { returnMetaData } from "../../shared/returnMetaData";
 
 const confirmationPayment = catchAsync(async (req, res) => {
   const transactionId = req?.query?.transactionId as string;
+  console.log(transactionId);
   const orderId = req.query?.orderId as string;
   const orderInfo = await prisma.order.findUnique({
     where: { id: orderId, paymentStatus: "UNPAID" },

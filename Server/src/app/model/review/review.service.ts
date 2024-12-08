@@ -40,6 +40,15 @@ const createReview = async (
     userId: userInfo.userId,
     productImg: imgFile ? imgFile.path : "",
   };
+  const isExist = await prisma.review.findFirst({
+    where: { userId: userInfo.userId, productId: payload.productId },
+  });
+  if (isExist) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You cannot review on a product multiple time"
+    );
+  }
 
   await prisma.product.findUniqueOrThrow({
     where: { id: payload.productId },
@@ -88,7 +97,7 @@ const deleteReview = async (reviewId: string, userInfo: TExtendedUserData) => {
       where: { id: reviewId, userId: userInfo.userId },
     });
   }
-  const result = await prisma.review.update({
+  await prisma.review.update({
     where: { id: reviewId },
     data: { isDeleted: true },
   });

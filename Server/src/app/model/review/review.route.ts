@@ -29,9 +29,14 @@ router.post(
 );
 
 // reviewId
-router.patch("/:id", auth("CUSTOMER"), ReviewController.updateReview);
+router.patch(
+  "/:id",
+  auth("CUSTOMER"),
+  validateRequest(ReviewValidation.update),
+  ReviewController.updateReview
+);
 
 // reviewId
-router.delete("/:id", auth("CUSTOMER"), ReviewController.updateReview);
+router.delete("/:id", auth("CUSTOMER"), ReviewController.deleteReview);
 
-export const NameRoutes = router;
+export const ReviewRoutes = router;
