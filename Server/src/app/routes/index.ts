@@ -5,6 +5,7 @@ import { ProductRoutes } from "../model/product/product.route";
 import { FollowRoutes } from "../model/follow/follow.route";
 import { UserRoutes } from "../model/users/user.route";
 import { CouponRoutes } from "../model/coupon/coupon.route";
+import { OrderRoutes } from "../model/order/order.route";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ const moduleRoutes = [
   { path: "/follow", element: FollowRoutes },
   { path: "/user", element: UserRoutes },
   { path: "/coupon", element: CouponRoutes },
+  { path: "/order", element: OrderRoutes },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.element));

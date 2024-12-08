@@ -180,7 +180,7 @@ model Payment {
   transactionId String
   amount        Float
   orderId       String   @unique
-  getwayData    String
+  gatewayData   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
