@@ -9,6 +9,8 @@ export type TCreateOrder = {
     productId: string;
     quantity: number;
   }[];
+
+  cancleUrl: string;
 };
 
 export type TInvalidProduct = {

@@ -12,6 +12,8 @@ export default {
   node_env: process.env.NODE_ENV,
   port: process.env.PORT,
   database_url: process.env.DATABASE_URL,
+  frontend_url: process.env.FRONTEND_URL,
+  backend_api: process.env.BACKEND_API,
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   jwt_access_secret: process.env.JWT_ACCESS_SECRET,
   jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
@@ -28,4 +30,8 @@ export default {
   cloudinary_folder_name: process.env.CLOUDINARY_FOLDER_NAME,
   sender_email: process.env.SENDER_EMAIL,
   sender_app_password: process.env.SENDER_APP_PASS,
+  aamarpay_store_id: process.env.AAMARPAY_STORE_ID,
+  aamarpay_signature_id: process.env.AAMARPAY_SIGNATURE_ID,
+  aamarpay_url: process.env.AAMARPAY_URL,
+  aamarpay_verify_url: process.env.AAMARPAY_VERIFY_URL,
 };

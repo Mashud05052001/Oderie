@@ -9,12 +9,14 @@ const router = Router();
 router.post(
   "/",
   validateRequest(OrderValidation.create),
-  auth("VENDOR"),
+  auth("CUSTOMER"),
   OrderController.createOrder
 );
 
+// User => can change to CANCELED
+// Vendor => can change to DELEVERED
 router.patch(
-  "/",
+  "/:id",
   auth("VENDOR", "CUSTOMER"),
   OrderController.changeOrderStatus
 );

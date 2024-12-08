@@ -8,13 +8,27 @@ import { OrderFilterItems } from "./order.constant";
 import { paginateProps } from "../../constant/model.constant";
 
 const createOrder = catchAsync(async (req, res) => {
-  const result = await OrderService.createOrder(req.body, res);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Name is created successfully",
-    data: result,
-  });
+  const { result, success } = await OrderService.createOrder(
+    req.body,
+    res,
+    req.extendedUserData
+  );
+
+  if (success) {
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Order created successfully",
+      data: result,
+    });
+  } else {
+    sendResponse(res, {
+      statusCode: httpStatus.BAD_REQUEST,
+      success: false,
+      message: "Failed to create the order.",
+      data: result,
+    });
+  }
 });
 
 const changeOrderStatus = catchAsync(async (req, res) => {

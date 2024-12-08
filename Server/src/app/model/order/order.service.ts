@@ -9,6 +9,7 @@ import { TCreateOrder, TInvalidProduct } from "./order.interface";
 import { TPaginationOptions } from "../../interface/model.type";
 import { queryBuilder } from "../../utils/searchBuilder";
 import { returnMetaData } from "../../shared/returnMetaData";
+import { initiatePayment } from "../payment/payment.utils";
 
 /*
 - Validate the vendor: check if it exists, is not blacklisted, and is active
@@ -19,11 +20,16 @@ import { returnMetaData } from "../../shared/returnMetaData";
     1. Create the order
     2. Create order items for each product
     3. Update product quantities in the database
+    4. Initiate Payment
 
 */
 
-const createOrder = async (payload: TCreateOrder, res: Response) => {
-  const { products, ...orderData } = payload;
+const createOrder = async (
+  payload: TCreateOrder,
+  res: Response,
+  userInfo: TExtendedUserData
+) => {
+  const { products, cancleUrl, ...orderData } = payload;
   const vendorData = await prisma.vendor.findUnique({
     where: {
       id: payload.vendorId,
@@ -34,7 +40,7 @@ const createOrder = async (payload: TCreateOrder, res: Response) => {
   if (!vendorData) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "This vendor has some issue. Currently you cannot purchased any product from this vendor "
+      "This vendor has some issue. Currently you cannot purchased any product from this vendor"
     );
   }
   const productIds = products.map((item) => item.productId);
@@ -64,15 +70,9 @@ const createOrder = async (payload: TCreateOrder, res: Response) => {
     return acc;
   }, []);
 
-  if (invalidProducts) {
-    sendResponse(res, {
-      statusCode: httpStatus.BAD_REQUEST,
-      success: false,
-      message: "This products with quantity is not exist",
-      data: invalidProducts,
-    });
+  if (invalidProducts.length > 0) {
+    return { result: invalidProducts, success: false };
   }
-
   // Create order, it's corresponding orderItem & update product quantity
   const result = await prisma.$transaction(async (tsx) => {
     const order = await tsx.order.create({ data: orderData });
@@ -82,31 +82,49 @@ const createOrder = async (payload: TCreateOrder, res: Response) => {
       orderId: order.id,
     }));
     await tsx.orderItem.createMany({ data: orderItemData });
-    products.map(async (item) => {
-      await tsx.product.update({
-        where: { id: item.productId },
-        data: { quantity: { decrement: item.quantity } },
-      });
-    });
-    return order;
+    await Promise.all(
+      products.map(async (item) => {
+        await tsx.product.update({
+          where: { id: item.productId },
+          data: { quantity: { decrement: item.quantity } },
+        });
+      })
+    );
+    const paymentData = await initiatePayment(
+      { orderId: order.id, cancleUrl: payload.cancleUrl },
+      userInfo,
+      orderData.totalPrice
+    );
+    return { order, paymentData };
   });
 
-  return result;
+  return { result, success: true };
 };
 
 // Used for canceled status for user end, delivered for vendorEnd. Processing will be on when payment success
+
 const changeOrderStatus = async (
   orderId: string,
   userInfo: TExtendedUserData,
   payload: { status: "DELIVERED" | "CANCELLED" }
 ) => {
+  if (userInfo.role === "VENDOR" && payload.status === "CANCELLED") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Vendor cannot cancle a product"
+    );
+  } else if (userInfo.role === "CUSTOMER" && payload.status === "DELIVERED") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Customer cannot change a product status delivered"
+    );
+  }
   if (userInfo.role !== "VENDOR" && payload.status === "DELIVERED") {
     throw new AppError(
       httpStatus.BAD_REQUEST,
       "Only vendor can change the status to delivered"
     );
   }
-
   const isOrderExist = await prisma.order.findUnique({
     where: { id: orderId },
   });
@@ -123,12 +141,14 @@ const changeOrderStatus = async (
   if (payload.status === "CANCELLED") {
     result = await prisma.$transaction(async (tsx) => {
       const orderItems = await tsx.orderItem.findMany({ where: { orderId } });
-      orderItems.map(async (orderItem) => {
-        await tsx.product.updateMany({
-          where: { id: orderItem.productId },
-          data: { quantity: { increment: orderItem.quantity } },
-        });
-      });
+      Promise.all(
+        orderItems.map(async (orderItem) => {
+          await tsx.product.updateMany({
+            where: { id: orderItem.productId },
+            data: { quantity: { increment: orderItem.quantity } },
+          });
+        })
+      );
       const order = await tsx.order.update({
         where: { id: orderId },
         data: { status: "CANCELLED" },
@@ -199,7 +219,11 @@ const getAllOrders = async (
     skip: quary.skip,
     take: quary.limit,
     include:
-      userData.role === "ADMIN" ? { User: true, Vendor: true } : { User: true },
+      userData.role === "ADMIN"
+        ? { User: { select: { Profile: true } }, Vendor: true }
+        : userData.role === "VENDOR"
+        ? { User: { select: { Profile: true } } }
+        : { Vendor: true },
   });
 
   // Count total orders based on query conditions
